@@ -1,6 +1,9 @@
 import os
 from flask import Flask, jsonify, request, render_template
 from services.indicators import validate_indicator
+from services.intelligence import investigate_ip
+
+
 
 app = Flask(__name__)
 
@@ -45,6 +48,22 @@ def investigate():
             status="invalid",
             result=result
         ), 400
+
+    if indicator_type == "ip":
+        intelligence = investigate_ip(result["value"])
+
+        return jsonify(
+            status=(
+                "completed"
+                if intelligence["status"] == "completed"
+                else "validated"
+            ),
+            indicator=result,
+            intelligence_status=intelligence["status"],
+            intelligence=intelligence,
+            verdict="unknown",
+            message=intelligence["message"]
+        ), 200
 
     return jsonify(
         status="validated",
