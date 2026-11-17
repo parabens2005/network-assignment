@@ -32,10 +32,16 @@ function displayResults(data) {
     const network = intel.network || {};
     const dns = intel.dns || {};
     const source = intel.source || {};
+    const reputation = intel.reputation || {};
     const isDomain = indicator.type === "domain";
+    const isHash = indicator.type === "sha256";
 
     results.hidden = false;
     resultMessage.hidden = true;
+
+    // Network/DNS cards do not apply to SHA-256 investigations.
+    document.getElementById("intel-network-card-1").hidden = isHash;
+    document.getElementById("intel-network-card-2").hidden = isHash;
 
     setText("intel-indicator", indicator.value);
     setText("intel-status", data.intelligence_status || data.status);
@@ -63,6 +69,24 @@ function displayResults(data) {
 
     document.getElementById("intel-dns-extra").hidden = !isDomain;
 
+    // Show reputation statistics only when a real lookup completed.
+    const hasReputation = isHash &&
+        data.intelligence_status === "completed" &&
+        intel.reputation &&
+        typeof reputation.malicious === "number" &&
+        typeof reputation.suspicious === "number" &&
+        typeof reputation.harmless === "number" &&
+        typeof reputation.undetected === "number";
+
+    document.getElementById("intel-hash-extra").hidden = !hasReputation;
+
+    if (hasReputation) {
+        setText("intel-malicious", reputation.malicious);
+        setText("intel-suspicious", reputation.suspicious);
+        setText("intel-harmless", reputation.harmless);
+        setText("intel-undetected", reputation.undetected);
+    }
+
     setText("intel-verdict", data.verdict || "unknown");
     setText("intel-source", source.provider);
     setText(
@@ -84,9 +108,20 @@ function displayResults(data) {
         "https://dns.google/resolve"
     ];
 
+    const expectedVirusTotalUrl =
+        "https://www.virustotal.com/gui/file/" + indicator.value;
+
     if (typeof endpoint === "string" &&
         trustedSources.includes(endpoint)) {
         sourceLink.href = endpoint;
+        sourceLink.hidden = false;
+    } else if (
+        isHash &&
+        hasReputation &&
+        source.provider === "VirusTotal" &&
+        source.report_url === expectedVirusTotalUrl
+    ) {
+        sourceLink.href = expectedVirusTotalUrl;
         sourceLink.hidden = false;
     } else {
         sourceLink.hidden = true;

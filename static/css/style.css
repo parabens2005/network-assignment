@@ -291,3 +291,29 @@ footer { padding: 15px 0 35px; color: #7287a3; font-size: 12px; }
     font-size: 15px;
     line-height: 1.6;
 }
+
+.hash-intelligence {
+    margin-top: 20px;
+}
+
+.hash-intelligence h3 {
+    margin-bottom: 8px;
+}
+
+.hash-intelligence .intel-grid {
+    margin-top: 14px;
+}
+
+.hash-intelligence .intel-card strong {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+#intel-indicator {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}

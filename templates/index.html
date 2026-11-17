@@ -101,11 +101,11 @@
                     </div>
 
                     <div class="intel-grid">
-                        <div class="intel-card">
+                        <div class="intel-card" id="intel-network-card-1">
                             <span id="intel-prefix-label">NETWORK PREFIX</span>
                             <strong id="intel-prefix">—</strong>
                         </div>
-                        <div class="intel-card">
+                        <div class="intel-card" id="intel-network-card-2">
                             <span id="intel-asn-label">ORIGIN ASN</span>
                             <strong id="intel-asn">—</strong>
                         </div>
@@ -122,6 +122,32 @@
                     <div id="intel-dns-extra" class="intel-card" hidden>
                         <span>MAIL EXCHANGE (MX)</span>
                         <strong id="intel-mx">—</strong>
+                    </div>
+
+                    <div id="intel-hash-extra" class="hash-intelligence" hidden>
+                        <h3>VirusTotal File Reputation</h3>
+                        <p class="intel-note">
+                            Detection counts reflect third-party engine assessments,
+                            not definitive proof of maliciousness or safety.
+                        </p>
+                        <div class="intel-grid">
+                            <div class="intel-card">
+                                <span>MALICIOUS</span>
+                                <strong id="intel-malicious">—</strong>
+                            </div>
+                            <div class="intel-card">
+                                <span>SUSPICIOUS</span>
+                                <strong id="intel-suspicious">—</strong>
+                            </div>
+                            <div class="intel-card">
+                                <span>HARMLESS</span>
+                                <strong id="intel-harmless">—</strong>
+                            </div>
+                            <div class="intel-card">
+                                <span>UNDETECTED</span>
+                                <strong id="intel-undetected">—</strong>
+                            </div>
+                        </div>
                     </div>
 
                     <p class="intel-meta" id="intel-timestamp"></p>

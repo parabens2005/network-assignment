@@ -152,3 +152,94 @@ def investigate_domain(domain):
             else "Some DNS lookups were unsuccessful. Results may be incomplete."
         )
     }
+
+
+def investigate_hash(sha256):
+    """Retrieve an existing VirusTotal file report by SHA-256 hash."""
+
+    import os
+    import re
+
+    if not isinstance(sha256, str) or not re.fullmatch(
+        r"[a-fA-F0-9]{64}", sha256
+    ):
+        return {
+            "status": "invalid",
+            "verdict": "unknown",
+            "message": "Invalid SHA-256 hash."
+        }
+
+    sha256 = sha256.lower()
+    api_key = os.environ.get("VIRUSTOTAL_API_KEY")
+
+    if not api_key:
+        return {
+            "status": "not_configured",
+            "indicator": sha256,
+            "verdict": "unknown",
+            "message": (
+                "VirusTotal API key is not configured. "
+                "The hash format was validated, but reputation was not checked."
+            )
+        }
+
+    endpoint = f"https://www.virustotal.com/api/v3/files/{sha256}"
+
+    try:
+        response = requests.get(
+            endpoint,
+            headers={"x-apikey": api_key},
+            timeout=10
+        )
+
+        if response.status_code == 404:
+            return {
+                "status": "not_found",
+                "indicator": sha256,
+                "verdict": "unknown",
+                "message": "No existing VirusTotal report was found for this hash."
+            }
+
+        if response.status_code == 429:
+            return {
+                "status": "rate_limited",
+                "indicator": sha256,
+                "verdict": "unknown",
+                "message": "VirusTotal API rate limit reached."
+            }
+
+        response.raise_for_status()
+
+        payload = response.json()
+        attributes = payload.get("data", {}).get("attributes", {})
+        stats = attributes.get("last_analysis_stats", {})
+
+        return {
+            "status": "completed",
+            "indicator": sha256,
+            "reputation": {
+                "malicious": stats.get("malicious", 0),
+                "suspicious": stats.get("suspicious", 0),
+                "harmless": stats.get("harmless", 0),
+                "undetected": stats.get("undetected", 0)
+            },
+            "source": {
+                "provider": "VirusTotal",
+                "report_url": f"https://www.virustotal.com/gui/file/{sha256}"
+            },
+            "queried_at_utc": datetime.now(timezone.utc).isoformat(),
+            "verdict": "unknown",
+            "message": (
+                "VirusTotal analysis statistics retrieved. "
+                "Detection counts are third-party assessments, "
+                "not definitive proof of maliciousness or safety."
+            )
+        }
+
+    except (requests.RequestException, ValueError, TypeError, AttributeError):
+        return {
+            "status": "unavailable",
+            "indicator": sha256,
+            "verdict": "unknown",
+            "message": "VirusTotal intelligence could not be retrieved."
+        }
