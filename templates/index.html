@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberSentinel | Threat Intelligence</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}" defer></script>
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="brand">◈ CYBERSENTINEL</div>
+            <div class="sidebar-label">SECURITY WORKSPACE</div>
+            <nav>
+                <a class="active" href="#investigation">◉ Investigation Centre</a>
+                <a href="#results">▤ Analysis Results</a>
+                <a href="#about">◇ About Platform</a>
+            </nav>
+            <div class="sidebar-footer">B9IS121 · Cloud Security Project</div>
+        </aside>
+
+        <main class="main">
+            <header class="topbar">
+                <span>SECURITY OPERATIONS / INVESTIGATION</span>
+                <span class="status">● Application Online</span>
+            </header>
+
+            <section class="hero">
+                <span class="eyebrow">THREAT INTELLIGENCE WORKBENCH</span>
+                <h1>CyberSentinel <span>Investigation Centre</span></h1>
+                <p>Analyse security indicators with transparent, evidence-backed findings.</p>
+            </section>
+
+            <section class="metrics">
+                <article class="metric">
+                    <span>PLATFORM</span>
+                    <strong>CyberSentinel</strong>
+                    <small>Flask / Python</small>
+                </article>
+                <article class="metric">
+                    <span>SUPPORTED INDICATORS</span>
+                    <strong>03</strong>
+                    <small>IP · Domain · SHA-256</small>
+                </article>
+                <article class="metric">
+                    <span>APPLICATION STATUS</span>
+                    <strong id="health-status">Checking...</strong>
+                    <small id="health-version">Health endpoint</small>
+                </article>
+            </section>
+
+            <section class="panel" id="investigation">
+                <div class="section-heading">
+                    <div>
+                        <span class="eyebrow">NEW INVESTIGATION</span>
+                        <h2>Indicator Analysis</h2>
+                    </div>
+                    <span class="tag">Validation mode</span>
+                </div>
+
+                <form id="investigation-form">
+                    <label for="indicator-type">Indicator type</label>
+                    <select id="indicator-type">
+                        <option value="ip">IP Address</option>
+                        <option value="domain">Domain</option>
+                        <option value="sha256">SHA-256 File Hash</option>
+                    </select>
+
+                    <label for="indicator-value">Indicator value</label>
+                    <input id="indicator-value"
+                           placeholder="Enter an IP address, e.g. 8.8.8.8"
+                           maxlength="253"
+                           required>
+
+                    <button id="investigate-button" type="submit">
+                        Investigate Indicator →
+                    </button>
+                </form>
+                <p class="hint">Investigate public IP addresses using RIPEstat, domains using Google Public DNS, and SHA-256 file hashes using VirusTotal. Download PDF reports of your findings.</p>
+            </section>
+
+            <section class="panel" id="results">
+                <div class="section-heading">
+                    <div>
+                        <span class="eyebrow">INVESTIGATION OUTPUT</span>
+                        <h2>Analysis Results</h2>
+                    </div>
+                </div>
+                <div id="result-message" class="empty-state">
+                    Submit an indicator to begin your investigation.
+                </div>
+
+                <div id="intelligence-results" class="intelligence-results" hidden>
+                    <div class="report-actions">
+                        <button
+                            id="download-report-button"
+                            type="button"
+                            hidden
+                        >
+                            Download PDF Report
+                        </button>
+                        <p id="report-download-message"
+                           role="status"
+                           aria-live="polite"></p>
+                    </div>
+                    <div class="intel-header">
+                        <div>
+                            <span class="eyebrow">ANALYSED INDICATOR</span>
+                            <h3 id="intel-indicator">—</h3>
+                        </div>
+                        <span id="intel-status" class="intel-badge">Pending</span>
+                    </div>
+
+                    <div class="intel-grid">
+                        <div class="intel-card" id="intel-network-card-1">
+                            <span id="intel-prefix-label">NETWORK PREFIX</span>
+                            <strong id="intel-prefix">—</strong>
+                        </div>
+                        <div class="intel-card" id="intel-network-card-2">
+                            <span id="intel-asn-label">ORIGIN ASN</span>
+                            <strong id="intel-asn">—</strong>
+                        </div>
+                        <div class="intel-card">
+                            <span>THREAT VERDICT</span>
+                            <strong id="intel-verdict">Unknown</strong>
+                        </div>
+                        <div class="intel-card">
+                            <span>INTELLIGENCE SOURCE</span>
+                            <strong id="intel-source">—</strong>
+                        </div>
+                    </div>
+
+                    <div id="intel-dns-extra" class="intel-card" hidden>
+                        <span>MAIL EXCHANGE (MX)</span>
+                        <strong id="intel-mx">—</strong>
+                    </div>
+
+                    <div id="intel-hash-extra" class="hash-intelligence" hidden>
+                        <h3>VirusTotal File Reputation</h3>
+                        <p class="intel-note">
+                            Detection counts reflect third-party engine assessments,
+                            not definitive proof of maliciousness or safety.
+                        </p>
+                        <div class="intel-grid">
+                            <div class="intel-card">
+                                <span>MALICIOUS</span>
+                                <strong id="intel-malicious">—</strong>
+                            </div>
+                            <div class="intel-card">
+                                <span>SUSPICIOUS</span>
+                                <strong id="intel-suspicious">—</strong>
+                            </div>
+                            <div class="intel-card">
+                                <span>HARMLESS</span>
+                                <strong id="intel-harmless">—</strong>
+                            </div>
+                            <div class="intel-card">
+                                <span>UNDETECTED</span>
+                                <strong id="intel-undetected">—</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="intel-meta" id="intel-timestamp"></p>
+                    <p class="intel-note" id="intel-note"></p>
+                    <a id="intel-source-link"
+                       href="#"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       hidden>View intelligence source</a>
+                </div>
+
+                <details class="raw-results">
+                    <summary>View raw investigation JSON</summary>
+                    <pre id="result-json" hidden></pre>
+                </details>
+            </section>
+
+            <section class="panel about" id="about">
+                <span class="eyebrow">PROJECT ARCHITECTURE</span>
+                <h2>Built for Secure Cloud Delivery</h2>
+                <div class="pipeline">
+                    <span>GitHub</span>
+                    <span>→</span>
+                    <span>GitHub Actions</span>
+                    <span>→</span>
+                    <span>Docker</span>
+                    <span>→</span>
+                    <span>Google Cloud Run</span>
+                </div>
+            </section>
+
+            <footer>CyberSentinel · MSc Cybersecurity · B9IS121</footer>
+        </main>
+    </div>
+</body>
+</html>

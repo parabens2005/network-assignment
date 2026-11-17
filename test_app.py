@@ -8,7 +8,7 @@ class AppTests(unittest.TestCase):
     def test_homepage(self):
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Cybersecurity CI/CD Project", response.data)
+        self.assertIn(b"CyberSentinel", response.data)
 
     def test_health(self):
         response = self.client.get("/health")
