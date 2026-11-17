@@ -135,16 +135,74 @@ function displayResults(data) {
 typeInput.addEventListener("change", () => {
     valueInput.placeholder = placeholders[typeInput.value];
     valueInput.value = "";
+    lastInvestigatedIndicator = null;
+    reportButton.hidden = true;
+    reportMessage.textContent = "";
     results.hidden = true;
     resultJson.hidden = true;
     resultMessage.hidden = false;
     resultMessage.textContent = "Select an indicator and begin investigation.";
 });
 
+const reportButton = document.getElementById("download-report-button");
+const reportMessage = document.getElementById("report-download-message");
+let lastInvestigatedIndicator = null;
+
+reportButton.addEventListener("click", async () => {
+    if (!lastInvestigatedIndicator || reportButton.disabled) return;
+
+    reportButton.disabled = true;
+    reportMessage.textContent = "Generating PDF report...";
+
+    try {
+        const response = await fetch("/api/report", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(lastInvestigatedIndicator)
+        });
+
+        if (!response.ok) {
+            let message = "Unable to generate PDF report.";
+            try {
+                const errorData = await response.json();
+                message = errorData.error || errorData.result?.reason || message;
+            } catch (_) {
+                // Keep the default error message.
+            }
+            throw new Error(message);
+        }
+
+        const pdfBlob = await response.blob();
+
+        if (!pdfBlob.type.includes("pdf")) {
+            throw new Error("The server did not return a PDF.");
+        }
+
+        const downloadUrl = URL.createObjectURL(pdfBlob);
+        const link = document.createElement("a");
+        link.href = downloadUrl;
+        link.download = "CyberSentinel_Investigation_Report.pdf";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+        reportMessage.textContent = "PDF report download started.";
+
+    } catch (error) {
+        reportMessage.textContent = error.message;
+    } finally {
+        reportButton.disabled = false;
+    }
+});
+
 form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     button.disabled = true;
+    lastInvestigatedIndicator = null;
+    reportButton.hidden = true;
+    reportMessage.textContent = "";
     results.hidden = true;
     resultJson.hidden = true;
     resultMessage.hidden = false;
@@ -171,6 +229,12 @@ form.addEventListener("submit", async (event) => {
         }
 
         displayResults(data);
+
+        lastInvestigatedIndicator = {
+            type: typeInput.value,
+            value: valueInput.value.trim()
+        };
+        reportButton.hidden = false;
 
     } catch (error) {
         resultMessage.textContent =

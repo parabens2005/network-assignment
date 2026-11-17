@@ -1,0 +1,166 @@
+from io import BytesIO
+from datetime import datetime, timezone
+from xml.sax.saxutils import escape
+
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import mm
+from reportlab.platypus import (
+    SimpleDocTemplate, Paragraph, Spacer, Table,
+    TableStyle, KeepTogether
+)
+
+
+def generate_investigation_pdf(result):
+    """Generate a PDF from a server-produced investigation result."""
+
+    buffer = BytesIO()
+
+    document = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=20 * mm,
+        leftMargin=20 * mm,
+        topMargin=20 * mm,
+        bottomMargin=20 * mm
+    )
+
+    styles = getSampleStyleSheet()
+
+    styles.add(ParagraphStyle(
+        name="CyberTitle",
+        parent=styles["Title"],
+        fontSize=20,
+        leading=25,
+        textColor=colors.HexColor("#123047"),
+        alignment=TA_CENTER,
+        spaceAfter=12
+    ))
+
+    styles.add(ParagraphStyle(
+        name="CyberHeading",
+        parent=styles["Heading2"],
+        textColor=colors.HexColor("#087F8C"),
+        spaceBefore=14,
+        spaceAfter=7
+    ))
+
+    styles.add(ParagraphStyle(
+        name="CyberBody",
+        parent=styles["BodyText"],
+        fontSize=9,
+        leading=14,
+        spaceAfter=7,
+        wordWrap="CJK"
+    ))
+
+    story = []
+
+    def paragraph(value):
+        return Paragraph(
+            escape(str(value if value is not None else "Not available")),
+            styles["CyberBody"]
+        )
+
+    def section(title):
+        story.append(Paragraph(title, styles["CyberHeading"]))
+
+    def detail(label, value):
+        story.append(paragraph(f"{label}: {value}"))
+
+    indicator = result.get("indicator") or {}
+    intelligence = result.get("intelligence") or {}
+    source = intelligence.get("source") or {}
+    indicator_type = indicator.get("type", "unknown")
+
+    story.append(Paragraph(
+        "CYBERSENTINEL",
+        styles["CyberTitle"]
+    ))
+    story.append(Paragraph(
+        "Digital Threat Intelligence Investigation Report",
+        styles["CyberBody"]
+    ))
+    story.append(Spacer(1, 8 * mm))
+
+    section("1. Investigation Overview")
+    detail("Indicator Type", indicator_type.upper())
+    detail("Indicator Value", indicator.get("value"))
+    detail("Investigation Status", result.get("intelligence_status"))
+    detail("Threat Verdict", result.get("verdict", "unknown"))
+    detail(
+        "Report Generated (UTC)",
+        datetime.now(timezone.utc).isoformat()
+    )
+
+    section("2. Intelligence Findings")
+
+    if indicator_type == "ip":
+        network = intelligence.get("network") or {}
+        detail("Network Prefix", network.get("prefix"))
+        detail("Origin ASN", ", ".join(
+            "AS" + str(asn) for asn in network.get("asns", [])
+        ) or "Not available")
+
+    elif indicator_type == "domain":
+        dns = intelligence.get("dns") or {}
+        for record_type in ("A", "AAAA", "MX"):
+            values = dns.get(record_type) or []
+            detail(
+                f"DNS {record_type} Records",
+                ", ".join(str(value) for value in values)
+                or "Not available"
+            )
+
+        errors = intelligence.get("errors") or []
+        if errors:
+            detail("DNS Lookup Errors", "; ".join(errors))
+
+    elif indicator_type == "sha256":
+        reputation = intelligence.get("reputation")
+
+        if isinstance(reputation, dict):
+            for key in ("malicious", "suspicious", "harmless", "undetected"):
+                detail(key.title(), reputation.get(key, "Not available"))
+        else:
+            story.append(paragraph(
+                "No file reputation statistics were retrieved."
+            ))
+
+    section("3. Intelligence Source")
+    detail("Provider", source.get("provider", "Not available"))
+    detail(
+        "Provider Endpoint",
+        source.get("endpoint") or source.get("report_url") or "Not available"
+    )
+    detail(
+        "Intelligence Queried (UTC)",
+        intelligence.get("queried_at_utc", "Not available")
+    )
+
+    section("4. Findings and Interpretation")
+    story.append(paragraph(
+        result.get("message") or "No interpretation was provided."
+    ))
+
+    section("5. Limitations")
+    story.append(paragraph(
+        "This report records automated intelligence queries and their "
+        "returned metadata. DNS and network routing records do not establish "
+        "malicious activity. VirusTotal detection statistics are third-party "
+        "assessments and do not independently prove that a file is malicious "
+        "or safe. Missing results must not be interpreted as evidence of safety."
+    ))
+
+    story.append(Spacer(1, 8 * mm))
+    story.append(paragraph(
+        "Generated by CyberSentinel. This report is an intelligence summary, "
+        "not a complete forensic examination or attribution assessment."
+    ))
+
+    document.build(story)
+
+    buffer.seek(0)
+    return buffer

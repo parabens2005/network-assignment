@@ -77,7 +77,7 @@
                         Investigate Indicator →
                     </button>
                 </form>
-                <p class="hint">Public IP addresses use live RIPEstat routing data. Domain and SHA-256 intelligence lookups are not yet connected.</p>
+                <p class="hint">Investigate public IP addresses using RIPEstat, domains using Google Public DNS, and SHA-256 file hashes using VirusTotal. Download PDF reports of your findings.</p>
             </section>
 
             <section class="panel" id="results">
@@ -92,6 +92,18 @@
                 </div>
 
                 <div id="intelligence-results" class="intelligence-results" hidden>
+                    <div class="report-actions">
+                        <button
+                            id="download-report-button"
+                            type="button"
+                            hidden
+                        >
+                            Download PDF Report
+                        </button>
+                        <p id="report-download-message"
+                           role="status"
+                           aria-live="polite"></p>
+                    </div>
                     <div class="intel-header">
                         <div>
                             <span class="eyebrow">ANALYSED INDICATOR</span>
