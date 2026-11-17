@@ -170,6 +170,21 @@ def investigate_hash(sha256):
         }
 
     sha256 = sha256.lower()
+
+    if (
+        os.environ.get("K_SERVICE")
+        and os.environ.get("CYBERSENTINEL_ALLOW_VT_CLOUD_RUN") != "1"
+    ):
+        return {
+            "status": "not_configured",
+            "indicator": sha256,
+            "verdict": "unknown",
+            "message": (
+                "VirusTotal lookups are disabled on this deployment. "
+                "SHA-256 format validation remains available."
+            )
+        }
+
     api_key = os.environ.get("VIRUSTOTAL_API_KEY")
 
     if not api_key:
