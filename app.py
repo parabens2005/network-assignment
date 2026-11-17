@@ -11,7 +11,7 @@ def home():
     </head>
     <body>
         <h1>Cybersecurity CI/CD Project</h1>
-        <h2>Version 1.0</h2>
+        <h2>Version 1.1</h2>
         <p>Deployed using Docker, GitHub Actions and Google Cloud Run.</p>
         <p>Network and Systems Administration - B9IS121</p>
     </body>
@@ -22,7 +22,7 @@ def home():
 def health():
     return jsonify(
         status="healthy",
-        version="1.0"
+        version="1.1"
     )
 
 if __name__ == "__main__":
