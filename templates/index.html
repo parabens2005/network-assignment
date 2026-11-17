@@ -102,11 +102,11 @@
 
                     <div class="intel-grid">
                         <div class="intel-card">
-                            <span>NETWORK PREFIX</span>
+                            <span id="intel-prefix-label">NETWORK PREFIX</span>
                             <strong id="intel-prefix">—</strong>
                         </div>
                         <div class="intel-card">
-                            <span>ORIGIN ASN</span>
+                            <span id="intel-asn-label">ORIGIN ASN</span>
                             <strong id="intel-asn">—</strong>
                         </div>
                         <div class="intel-card">
@@ -117,6 +117,11 @@
                             <span>INTELLIGENCE SOURCE</span>
                             <strong id="intel-source">—</strong>
                         </div>
+                    </div>
+
+                    <div id="intel-dns-extra" class="intel-card" hidden>
+                        <span>MAIL EXCHANGE (MX)</span>
+                        <strong id="intel-mx">—</strong>
                     </div>
 
                     <p class="intel-meta" id="intel-timestamp"></p>

@@ -19,24 +19,50 @@ function setText(id, value) {
             : String(value);
 }
 
+function formatRecords(records) {
+    return Array.isArray(records) && records.length
+        ? records.filter(value => value !== null && value !== undefined)
+            .join(", ") || "Not available"
+        : "Not available";
+}
+
 function displayResults(data) {
     const indicator = data.indicator || {};
     const intel = data.intelligence || {};
     const network = intel.network || {};
+    const dns = intel.dns || {};
     const source = intel.source || {};
+    const isDomain = indicator.type === "domain";
 
     results.hidden = false;
     resultMessage.hidden = true;
 
     setText("intel-indicator", indicator.value);
     setText("intel-status", data.intelligence_status || data.status);
-    setText("intel-prefix", network.prefix);
-    setText(
-        "intel-asn",
-        Array.isArray(network.asns) && network.asns.length
-            ? network.asns.map(asn => "AS" + asn).join(", ")
-            : null
-    );
+
+    document.getElementById("intel-prefix-label").textContent =
+        isDomain ? "IPv4 ADDRESSES (A)" : "NETWORK PREFIX";
+
+    document.getElementById("intel-asn-label").textContent =
+        isDomain ? "IPv6 ADDRESSES (AAAA)" : "ORIGIN ASN";
+
+    if (isDomain) {
+        setText("intel-prefix", formatRecords(dns.A));
+        setText("intel-asn", formatRecords(dns.AAAA));
+        setText("intel-mx", formatRecords(dns.MX));
+    } else {
+        setText("intel-prefix", network.prefix);
+        setText(
+            "intel-asn",
+            Array.isArray(network.asns) && network.asns.length
+                ? network.asns.map(asn => "AS" + asn).join(", ")
+                : null
+        );
+        setText("intel-mx", null);
+    }
+
+    document.getElementById("intel-dns-extra").hidden = !isDomain;
+
     setText("intel-verdict", data.verdict || "unknown");
     setText("intel-source", source.provider);
     setText(
@@ -53,9 +79,13 @@ function displayResults(data) {
     const sourceLink = document.getElementById("intel-source-link");
     const endpoint = source.endpoint;
 
-    // Only link to the fixed, trusted intelligence provider.
+    const trustedSources = [
+        "https://stat.ripe.net/data/network-info/data.json",
+        "https://dns.google/resolve"
+    ];
+
     if (typeof endpoint === "string" &&
-        endpoint.startsWith("https://stat.ripe.net/")) {
+        trustedSources.includes(endpoint)) {
         sourceLink.href = endpoint;
         sourceLink.hidden = false;
     } else {
@@ -70,6 +100,10 @@ function displayResults(data) {
 typeInput.addEventListener("change", () => {
     valueInput.placeholder = placeholders[typeInput.value];
     valueInput.value = "";
+    results.hidden = true;
+    resultJson.hidden = true;
+    resultMessage.hidden = false;
+    resultMessage.textContent = "Select an indicator and begin investigation.";
 });
 
 form.addEventListener("submit", async (event) => {
@@ -95,7 +129,9 @@ form.addEventListener("submit", async (event) => {
 
         if (!response.ok) {
             resultMessage.textContent =
-                data.error || "Invalid indicator. Please check your input.";
+                data.error ||
+                data.result?.reason ||
+                "Invalid indicator. Please check your input.";
             return;
         }
 

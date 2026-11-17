@@ -1,7 +1,7 @@
 import os
 from flask import Flask, jsonify, request, render_template
 from services.indicators import validate_indicator
-from services.intelligence import investigate_ip
+from services.intelligence import investigate_ip, investigate_domain
 
 
 
@@ -49,8 +49,11 @@ def investigate():
             result=result
         ), 400
 
-    if indicator_type == "ip":
-        intelligence = investigate_ip(result["value"])
+    if indicator_type in ("ip", "domain"):
+        if indicator_type == "ip":
+            intelligence = investigate_ip(result["value"])
+        else:
+            intelligence = investigate_domain(result["value"])
 
         return jsonify(
             status=(

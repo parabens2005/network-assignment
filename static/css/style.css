@@ -282,3 +282,12 @@ footer { padding: 15px 0 35px; color: #7287a3; font-size: 12px; }
         grid-template-columns: 1fr;
     }
 }
+
+#intel-dns-extra {
+    margin-top: 14px;
+}
+
+#intel-dns-extra strong {
+    font-size: 15px;
+    line-height: 1.6;
+}

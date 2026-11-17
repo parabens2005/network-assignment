@@ -77,12 +77,40 @@ class IndicatorAPITests(unittest.TestCase):
         self.assertEqual(data["intelligence_status"], "unavailable")
         self.assertEqual(data["verdict"], "unknown")
 
-    def test_valid_domain(self):
+    @patch("app.investigate_domain")
+    def test_valid_domain(self, mock_investigate):
+        mock_investigate.return_value = {
+            "status": "completed",
+            "indicator": "example.com",
+            "dns": {
+                "A": ["192.0.2.1"],
+                "AAAA": [],
+                "MX": ["0 ."]
+            },
+            "errors": [],
+            "source": {"provider": "Google Public DNS"},
+            "verdict": "unknown",
+            "message": "DNS information retrieved."
+        }
+
         response = self.client.post(
             "/api/investigate",
             json={"type": "domain", "value": "example.com"}
         )
+
         self.assertEqual(response.status_code, 200)
+
+        data = response.get_json()
+
+        self.assertEqual(data["status"], "completed")
+        self.assertEqual(data["intelligence_status"], "completed")
+        self.assertEqual(data["verdict"], "unknown")
+        self.assertEqual(
+            data["intelligence"]["source"]["provider"],
+            "Google Public DNS"
+        )
+
+        mock_investigate.assert_called_once_with("example.com")
 
     def test_valid_sha256(self):
         response = self.client.post(
